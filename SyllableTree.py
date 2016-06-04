@@ -12,73 +12,118 @@ stressed = chr(0x301)
 
 class SyllableTree:
     def __init__(self,text):
+        self.syllables = []
+
         self.first = None
         self.last = None
-        self.count = None
 
         self.firstAccent = None
         self.lastAccent = None
         self.preLastAccent = None
 
-        #self.BuildWord(text)
+        self.words = []
+
+        self.firstWord = None
+        self.lastWord = None
+
         self.Build(text)
 
-    #построить дерево уровня "слова"
-    def BuildWord(self,text):
-        split = ' ;:.,?!'  # строка символов
-        prev = 0
+    def __len__(self):
+        return len(self.syllables)
+
+    def Build(self, text):
+        self.BuildWords(text)
+        self.BuildSyllables()
+        self.FindAccents()
+
+    def BuildWords(self, text):
+        # Разбиваем текст на слова
+        s = self.SplitToWordsWithPunctuation(text)
+
+        # Если строка начинается с пунктуации, отбрасываем, т.к. так не бывает (пусть)
+        if len(s) and not s[0][0]:
+            del s[0]
+
+        # Каждому слову сопостовляем экземпляр класса words
+        self.words = [Word(x[0], punctuation = x[1]) for x in s]
+
+        # Перевязываем слова между собой (next-prev)
+        self.LinkItems(self.words)
+
+        if self.words:
+            self.firstWord = self.words[0]
+            self.lastWord = self.words[-1]
+
+    splitSymbols = ' ;:.,?!'
+
+    """
+    Разбить на слова вместе с пунктуацией
+    Возвращает список пар (слово, знаки пунктуации после него)
+    """
+    def SplitToWordsWithPunctuation(self,text):
+        split = self.splitSymbols
+
         s = []
-        for i in range(len(text)):
+
+        wS = 0
+        i = 0
+
+        while i < len(text):
             if text[i] in split:
-                e = text[prev:i]
-                if e != "":
-                    s.append(e)
-                prev =i+1
-            elif (i == len(text)-1):
-                s.append(text[prev:i+1])
-                prev =i+1
-        print(s)
+                w = text[wS:i]
+
+                pS = i
+                while i < len(text) and text[i] in split:
+                    i+=1
+
+                p = text[pS:i]
+                wS = i
+
+                s.append((w, p))
+
+            elif i == len(text) - 1:
+                s.append((text[wS:], None))
+
+            i+=1
+
+
         return s
 
-    #построить дерево уровня "слоги"
-    def Build(self, text):
-        m = self.SplitToSyllables(text)
+    def LinkItems(self, arr):
+        for i in range(len(arr)-1):
+            arr[i].next = arr[i+1]
+            arr[i+1].prev = arr[i]
 
-        print(m)
-
-        self.syllables = []
-
-        for i in range(len(m)):
-            self.syllables.append(Syllable(m[i], i, isStressed = m[i][-1] == stressed))
-
-        for i in range(len(self.syllables) - 1):
-            self.LinkSyllables(self.syllables[i], self.syllables[i+1])
-
-        self.first = self.syllables[0]
-        self.last = self.syllables[-1]
-
-        self.count = len(self.syllables)
-
-        #self.FindAccents()
-
-    def FindAccents (self):
-        w = self.lastWord
-
-        if w.stressedSyllable == self.last:
-            w = w.prev
-
-        while not w.stressedSyllable:
-            w = w.prev
+            arr[i].num = i
+            arr[i+1].num = i+1
 
 
+    def BuildSyllables(self):
+        for w in self.words:
+            syl = [Syllable(x) for x in self.SplitToSyllables(w.word)]
 
+            if syl:
+                w.firstSyllable = syl[0]
+                w.lastSyllable = syl[-1]
 
+                for s in syl:
+                    if stressed in s.str:
+                        w.stressedSyllable = s
+                        break
 
+                self.syllables += syl
 
+        self.LinkItems(self.syllables)
+
+        if (self.syllables):
+            self.first = self.syllables[0]
+            self.last = self.syllables[-1]
+
+    poemSymbols = 'аеиоуыэюя'  # строка глассных
 
     #разбить на слоги
     def SplitToSyllables(self, text):
-        poem = 'аеиоуыэюя'  # строка глассных
+        poem = self.poemSymbols
         prev = 0
         m = []
         for i in range(len(text)):
@@ -89,10 +134,30 @@ class SyllableTree:
                     k=k+1
                 m.append(text[prev:k])
                 prev = k
+            elif i == len(text)-1 and m:
+                m[-1] += text[prev:]
+
+
             #elif text[i] in poem and (i+1 == len(text)-1):
             #    m.append(text[prev:i+2])
             #    prev =i+1
+
         return m
+
+    def FindAccents (self):
+        return
+
+        pass
+
+        w = self.lastWord
+
+        if w.stressedSyllable == self.last:
+            w = w.prev
+
+        while not w.stressedSyllable:
+            w = w.prev
+
+
 
     def LinkSyllables(self, a, b):
         a.next = b
@@ -100,15 +165,15 @@ class SyllableTree:
 
     def __repr__(self):
         s = ""
-        for i in self.syllables:
-            s+= i.markup if i.markup else i.str
+        for w in self.words:
+            s += str(w)
 
         return s
 
 
 
 class Syllable:
-    def __init__(self, str, num, next= None, prev = None, isStressed = False):
+    def __init__(self, str, num = None, next= None, prev = None, isStressed = False):
         self.str = str
         self.next = next
         self.prev = prev
@@ -128,42 +193,97 @@ class Syllable:
         if self.markup:
             raise SyllableTreeException("Слог '%s' уже размечен" % self.str)
 
-    def setUp(self):
+    def _setMarkup(self, char):
         self.CheckMarkup()
-        self.markup = self.str+chr(0x301)
+
+        # Ищем вхождение гласной
+
+        for i in range(len(self.str)):
+            if self.str[i] in SyllableTree.poemSymbols:
+                # Ставим знак
+                self.markup = self.str[:i+1] + char + self.str[i+1:]
+                return
+
+        raise SyllableTreeException("В слоге '%s' не найдена гласная" % self.str)
+
+
+
+
+    def setUp(self):
+        self._setMarkup(chr(0x301))
         return self
 
     def setDown(self):
-        self.CheckMarkup()
-        self.markup = self.str+chr(0x300)
+        self._setMarkup(chr(0x300))
         return self
 
     def setLowerAccent(self):
-        self.CheckMarkup()
-        self.markup = self.str+chr(0x30C)
+        self._setMarkup(chr(0x30C))
         return self
 
     def setUpperAccent(self):
-        self.CheckMarkup()
-        self.markup = self.str+chr(0x302)
+        self._setMarkup(chr(0x302))
         return self
 
     def waveAccent(self):
-        self.CheckMarkup()
-        self.markup = self.str+chr(0x305)
+        self._setMarkup(chr(0x305))
         return self
 
     def pauseAccent(self):
-        self.CheckMarkup()
-        self.markup = self.str+chr(0x303)
+        self._setMarkup(chr(0x303))
         return self
 
-def main():
-    a= SyllableTree('С высоты{0} снизше{0}л еси{0} Благоутро{0}бне'.format(stressed))
+    def __str__(self):
+        return self.markup or self.str
 
-if __name__ == '__main__':
-    main()
+    def __repr__(self):
+        return "Syllable('%s', %s, prev=%s, next=%s)" % (str(self), self.num, self.prev, self.next)
+
+class Word:
+    def __init__(self, w, num = None, punctuation = None, next = None, prev = None):
+        self.word = w
+        self.num = num
+
+        self.next = None
+        self.prev = None
+
+        self.firstSyllable = None
+        self.lastSyllable = None
+        self.stressedSyllable = None
+
+        # Знаки пунктуации после слова
+        self.punctuation = punctuation
+
+    def GetSyllables(self):
+        x = self.firstSyllable
+
+        while x and x.prev != self.lastSyllable:
+            yield x
+            x = x.next
+
+    def __str__(self):
+        if not self.firstSyllable:
+            return self.word + (self.punctuation or '')
+        else:
+            return "".join(str(x) for x in self.GetSyllables()) + (self.punctuation or '')
+
+
+    def __repr__(self):
+        return "Word('%s', %s, next=%s, prev=%s)" % (str(self), self.stressedSyllable, self.next, self.prev)
+
 
 class SyllableTreeException(Exception):
     def __init__(self, msg):
         self.message = msg
+
+
+def main():
+    s = ' ,,С высоты{0} снизше{0}л?? еси{0}, Благоутро{0}бне!!'.format(stressed)
+
+    a = SyllableTree(s)
+
+    print(a)
+
+if __name__ == '__main__':
+    main()
+

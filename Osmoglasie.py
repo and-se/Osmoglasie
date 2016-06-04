@@ -84,7 +84,7 @@ class Glas8_Template:
         #размечаем последний акцент
 
         # Если осталось мало слогов?
-        ostatok = tree.count - pointer.num -1
+        ostatok = len(tree) - pointer.num -1
         if not ostatok:
             raise MarkupException("Слишком короткая строка: %s" % line)
         elif ostatok <= 2:
