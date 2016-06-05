@@ -17,10 +17,6 @@ class SyllableTree:
         self.first = None
         self.last = None
 
-        self.firstAccent = None
-        self.lastAccent = None
-        self.preLastAccent = None
-
         self.words = []
 
         self.firstWord = None
@@ -34,7 +30,6 @@ class SyllableTree:
     def Build(self, text):
         self.BuildWords(text)
         self.BuildSyllables()
-        self.FindAccents()
 
     def BuildWords(self, text):
         # Разбиваем текст на слова
@@ -119,7 +114,7 @@ class SyllableTree:
             self.first = self.syllables[0]
             self.last = self.syllables[-1]
 
-    poemSymbols = 'аеиоуыэюя'  # строка глассных
+    poemSymbols = 'аеиоуыэюя' + 'аеиоуыэюя'.upper()  # строка глассных
 
     #разбить на слоги
     def SplitToSyllables(self, text):
@@ -144,25 +139,6 @@ class SyllableTree:
 
         return m
 
-    def FindAccents (self):
-        return
-
-        pass
-
-        w = self.lastWord
-
-        if w.stressedSyllable == self.last:
-            w = w.prev
-
-        while not w.stressedSyllable:
-            w = w.prev
-
-
-
-    def LinkSyllables(self, a, b):
-        a.next = b
-        b.prev = a
-
     def __repr__(self):
         s = ""
         for w in self.words:
@@ -175,6 +151,7 @@ class SyllableTree:
 class Syllable:
     def __init__(self, str, num = None, next= None, prev = None, isStressed = False):
         self.str = str
+        self.cleanStr = self.clearStr(self.str)
         self.next = next
         self.prev = prev
         #self.isAccent = None
@@ -189,6 +166,9 @@ class Syllable:
         #else:
         #    self.isStressed = False
 
+    def clearStr(self, s):
+        return s.replace(chr(0x301), '')
+
     def CheckMarkup(self):
         if self.markup:
             raise SyllableTreeException("Слог '%s' уже размечен" % self.str)
@@ -198,10 +178,10 @@ class Syllable:
 
         # Ищем вхождение гласной
 
-        for i in range(len(self.str)):
-            if self.str[i] in SyllableTree.poemSymbols:
+        for i in range(len(self.cleanStr)):
+            if self.cleanStr[i] in SyllableTree.poemSymbols:
                 # Ставим знак
-                self.markup = self.str[:i+1] + char + self.str[i+1:]
+                self.markup = self.cleanStr[:i+1] + char + self.cleanStr[i+1:]
                 return
 
         raise SyllableTreeException("В слоге '%s' не найдена гласная" % self.str)
@@ -234,7 +214,7 @@ class Syllable:
         return self
 
     def __str__(self):
-        return self.markup or self.str
+        return self.markup or self.cleanStr
 
     def __repr__(self):
         return "Syllable('%s', %s, prev=%s, next=%s)" % (str(self), self.num, self.prev, self.next)
@@ -270,6 +250,15 @@ class Word:
 
     def __repr__(self):
         return "Word('%s', %s, next=%s, prev=%s)" % (str(self), self.stressedSyllable, self.next, self.prev)
+
+    def canBeAccent(self):
+        return self.stressedSyllable != None
+
+    def __eq__(self, other):
+        if isinstance(other, str):
+            return self.word.replace(chr(0x301), '') == other
+
+        return NotImplemented
 
 
 class SyllableTreeException(Exception):

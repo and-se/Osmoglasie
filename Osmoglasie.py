@@ -9,6 +9,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 from SyllableTree import *
+from AccentsSearcher import *
 
 """
 Разметить текст на глас указанного жанра песнопений (тропарный и т.д.)
@@ -24,7 +25,10 @@ def Markup(text, glas, type):
     m_text = markupper.Markup(ls)
 
     # Возвращаем результат в виде текста с разметкой
-    return str(m_text)
+    r_list = [str(x) for x in m_text[:-1]]
+
+    return "/ ".join(r_list) + "// " + str(m_text[-1])
+
 
 """
 Разбить текст на логические строки
@@ -32,7 +36,7 @@ def Markup(text, glas, type):
 def GetLogicalStrings(text):
     k = text.split('//')
     if len(k) != 2:
-        raise LogicalStringsException('Некорректное конечное колено')
+        raise LogicalStringsException('Не обозначено конечное колено или их больше одного')
 
     if '/' in k[1]:
         raise LogicalStringsException('Обозначено конечным не последнее колено')
@@ -79,6 +83,13 @@ class Glas8_Template:
             raise MarkupException('Некорректный номер колена')
         #конструктор создаем элемент класса дерево
         tree = SyllableTree(line)
+
+        #Нам нужен только последний акцент
+        accents = AccentsSearcher(tree, "last")
+
+        if len(tree) < 7:
+            raise MarkupException("Слишком короткая строка: %s" % line)
+
         #размечаем всё начало строки
         pointer= tree.first.next.setDown().next.setUp().next.setUp().next.next.setDown()
         #размечаем последний акцент
@@ -88,11 +99,14 @@ class Glas8_Template:
         if not ostatok:
             raise MarkupException("Слишком короткая строка: %s" % line)
         elif ostatok <= 2:
-            pointer = pointer.next.setDown()
+            if pointer.next == accents.lastAccent:
+                pointer = pointer.next.setLowerAccent()
+            else:
+                pointer = pointer.next.setDown()
             if pointer != tree.last:
                 pointer.next.setDown()
         else:
-          ##tree.lastAccent.setLowerAccent()
+          accents.lastAccent.setLowerAccent()
           #размечаем последний слог
           tree.last.setDown()
 
@@ -115,6 +129,9 @@ class OsmoglasieException(Exception):
     def __init__(self, msg):
         self.message = msg
 
+    def __str__(self):
+        return self.message
+
 class LogicalStringsException(OsmoglasieException):
     def __init__(self, msg):
         self.message = msg
@@ -131,7 +148,7 @@ if __name__ == "__main__":
     text = """С высоты{0} снизше{0}л еси{0} Благоутро{0}бне,/
 погребе{0}ние прия{0}л еси{0} тридне{0}вное,/
 да на{0}с свободи{0}ши страсте{0}й,//
-Животе{0} и воскресе{0}ние на{0}ше. Гоc{0}поди, сла{0}ва Тебе{0}.
-""".format(chr(0x301) if False else '')
+Животе{0} и воскресе{0}ние на{0}ше. Гоc{0}поди, сла{0}ва Тебе{0} е{0}си.
+""".format(chr(0x301) if True else '')
 
     print(Markup(text, 8, "тропарь"))
