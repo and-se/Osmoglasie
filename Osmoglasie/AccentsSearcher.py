@@ -1,4 +1,4 @@
-from SyllableTree import *
+from .SyllableTree import *
 
 class AccentsSearcher:
     def __init__(self, tree, mode):
