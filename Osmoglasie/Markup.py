@@ -10,6 +10,7 @@
 #-------------------------------------------------------------------------------
 from .SyllableTree import *
 from .AccentsSearcher import *
+from .Exceptions import *
 from . import Tropar
 
 """
@@ -47,23 +48,12 @@ def GetLogicalStrings(text):
     return list(map(str.strip, lines + [k[1]]))
 
 def GetGlasTemplate(glas, type):
-    if glas == 8 and type == "тропарь":
+    if type != "тропарь":
+        raise NotImplementedError()
+
+    if glas == 8:
         return Tropar.Glas8_Template()
+    elif glas == 6:
+        return Tropar.Glas6_Template()
 
     raise NotImplementedError()
-
-
-class OsmoglasieException(Exception):
-    def __init__(self, msg):
-        self.message = msg
-
-    def __str__(self):
-        return self.message
-
-class LogicalStringsException(OsmoglasieException):
-    def __init__(self, msg):
-        self.message = msg
-
-class MarkupException(OsmoglasieException):
-    def __init__(self, msg):
-        self.message = msg

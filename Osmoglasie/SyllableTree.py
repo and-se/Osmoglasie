@@ -8,7 +8,19 @@
 # Copyright:   (c) Танюшка 2016
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
+
+from .Exceptions import *
+
 stressed = chr(0x301)
+
+def ClearStr(s):
+    return s.replace(stressed, '')
+
+# Двусоставные слова, числом указан номер слога с "невидимым" ударением
+compoundWordStems = {
+"человеколюб" : 2,
+"многомилостив" : 1
+}
 
 class SyllableTree:
     def __init__(self,text):
@@ -95,7 +107,7 @@ class SyllableTree:
 
     def BuildSyllables(self):
         for w in self.words:
-            syl = [Syllable(x) for x in self.SplitToSyllables(w.word)]
+            syl = [Syllable(x, w) for x in self.SplitToSyllables(w.word)]
 
             if syl:
                 w.firstSyllable = syl[0]
@@ -149,15 +161,16 @@ class SyllableTree:
 
 
 class Syllable:
-    def __init__(self, str, num = None, next= None, prev = None, isStressed = False):
+    def __init__(self, str, parentWord, num = None, next= None, prev = None, isStressed = False):
         self.str = str
-        self.cleanStr = self.clearStr(self.str)
+        self.cleanStr = ClearStr(self.str)
         self.next = next
         self.prev = prev
         #self.isAccent = None
         self.num = num
         self.isStressed = isStressed
         self.markup = None
+        self.parentWord = parentWord
 
         # Определим ударение
         #y = None # значок ударения
@@ -165,9 +178,6 @@ class Syllable:
         #    self.isStressed = True
         #else:
         #    self.isStressed = False
-
-    def clearStr(self, s):
-        return s.replace(chr(0x301), '')
 
     def CheckMarkup(self):
         if self.markup:
@@ -205,12 +215,12 @@ class Syllable:
         self._setMarkup(chr(0x302))
         return self
 
-    def waveAccent(self):
-        self._setMarkup(chr(0x305))
+    def setWaveAccent(self):
+        self._setMarkup(chr(0x303))
         return self
 
-    def pauseAccent(self):
-        self._setMarkup(chr(0x303))
+    def setPauseAccent(self):
+        self._setMarkup(chr(0x305))
         return self
 
     def __str__(self):
@@ -252,18 +262,21 @@ class Word:
         return "Word('%s', %s, next=%s, prev=%s)" % (str(self), self.stressedSyllable, self.next, self.prev)
 
     def canBeAccent(self):
+        # У предлогов и союзов не должно стоять ударение
         return self.stressedSyllable != None
+
+
+
+    # является ли слово двусоставным
+    #def isCompound(self):
+        #ClearStr(self.word).lower() in compoundWordStems.keys()
+
 
     def __eq__(self, other):
         if isinstance(other, str):
-            return self.word.replace(chr(0x301), '') == other
+            return ClearStr(self.word) == other
 
         return NotImplemented
-
-
-class SyllableTreeException(Exception):
-    def __init__(self, msg):
-        self.message = msg
 
 
 def main():

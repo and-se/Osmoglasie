@@ -1,36 +1,18 @@
 from ..SyllableTree import *
 from ..AccentsSearcher import *
+from ..GlasBase import *
+from ..Exceptions import *
 
-class Glas8_Template:
+class Glas8_Template(GlasTemplateBase):
     def CreateSchema(self):
         return Glas8_Schema()
-
-    """
-    Размечает логические строки на глас
-    """
-    def Markup(self, strings):
-        result = []
-        schema = self.CreateSchema()
-        # количество неразмеченных строк
-        ost = len(strings)
-        # размечаем все строки, кроме последней
-        for s in strings[:-1]:
-            # переход на следующее колено
-            schema.Next(ost)
-            ost = ost-1
-            result.append(self.MarkupLine(s, schema.current))
-
-        schema.Last()
-        result.append(self.MarkupLine(strings[-1], schema.current))
-
-        return result
 
     """
     Размечает строку на указанное колено
     """
     def MarkupLine (self, line, schema_line):
         if schema_line  != "1":
-            raise MarkupException('Некорректный номер колена')
+            raise MarkupException('Некорректный номер колена %s' % schema_line)
         #конструктор создаем элемент класса дерево
         tree = SyllableTree(line)
 
@@ -39,6 +21,9 @@ class Glas8_Template:
 
         if len(tree) < 7:
             raise MarkupException("Слишком короткая строка: %s" % line)
+
+        # Схема колена: . \ / / . \ ... v ... \
+        # . - один слог; \ и / - спуск подъём; v - нисходящий акцент
 
         #размечаем всё начало строки
         pointer= tree.first.next.setDown().next.setUp().next.setUp().next.next.setDown()
@@ -60,11 +45,11 @@ class Glas8_Template:
           #размечаем последний слог
           tree.last.setDown()
 
-  #Не разрешать переопределять значки в уже размеченных слогах
+        #Не разрешать переопределять значки в уже размеченных слогах
 
         return tree
 
-class Glas8_Schema:
+class Glas8_Schema(GlasSchemaBase):
     def __init__(self):
         self.current = None
 
