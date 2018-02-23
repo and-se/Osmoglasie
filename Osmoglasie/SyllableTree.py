@@ -181,7 +181,7 @@ class Syllable:
 
     def CheckMarkup(self):
         if self.markup:
-            raise SyllableTreeException("Слог '%s' уже размечен" % self.str)
+            raise SyllableTreeException("Слог '%s' в слове '%s' уже размечен" % (self.str, self.parentWord))
 
     def _setMarkup(self, char):
         self.CheckMarkup()
@@ -208,11 +208,13 @@ class Syllable:
         return self
 
     def setLowerAccent(self):
-        self._setMarkup(chr(0x30C))
+        #self._setMarkup(chr(0x30C))
+        self._setMarkup(chr(0x2c7))
         return self
 
     def setUpperAccent(self):
-        self._setMarkup(chr(0x302))
+        #self._setMarkup(chr(0x302))
+        self._setMarkup(chr(0x2c6))
         return self
 
     def setWaveAccent(self):
@@ -220,7 +222,8 @@ class Syllable:
         return self
 
     def setPauseAccent(self):
-        self._setMarkup(chr(0x305))
+        #self._setMarkup(chr(0x305))
+        self._setMarkup(chr(0x2C9))
         return self
 
     def __str__(self):

@@ -1,4 +1,4 @@
-from ..SyllableTree import *
+﻿from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *
@@ -41,9 +41,16 @@ class Glas8_Template(GlasTemplateBase):
             if pointer != tree.last:
                 pointer.next.setDown()
         else:
-          accents.lastAccent.setLowerAccent()
-          #размечаем последний слог
-          tree.last.setDown()
+            if accents.lastAccent.num > pointer.num:
+                accents.lastAccent.setLowerAccent()
+            else:
+                tree.last.prev.setDown()
+
+            #размечаем последний слог
+            tree.last.setDown()
+
+
+
 
         #Не разрешать переопределять значки в уже размеченных слогах
 

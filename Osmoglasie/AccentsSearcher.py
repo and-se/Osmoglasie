@@ -1,4 +1,4 @@
-from .SyllableTree import *
+﻿from .SyllableTree import *
 from .Exceptions import *
 
 class AccentsSearcher:

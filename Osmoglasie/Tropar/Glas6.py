@@ -1,4 +1,4 @@
-from ..SyllableTree import *
+﻿from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *
