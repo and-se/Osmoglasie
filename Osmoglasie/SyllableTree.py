@@ -11,7 +11,7 @@
 
 from .Exceptions import *
 
-stressed = chr(0x301)
+stressed = chr(0x301)#ударение
 
 def ClearStr(s):
     return s.replace(stressed, '')
@@ -21,7 +21,7 @@ compoundWordStems = {
 "человеколюб" : 2,
 "многомилостив" : 1
 }
-
+#дерево слогов
 class SyllableTree:
     def __init__(self,text):
         self.syllables = []
@@ -208,13 +208,13 @@ class Syllable:
         return self
 
     def setLowerAccent(self):
-        #self._setMarkup(chr(0x30C))
-        self._setMarkup(chr(0x2c7))
+        self._setMarkup(chr(0x30C))
+        #self._setMarkup(chr(0x2c7))
         return self
 
     def setUpperAccent(self):
-        #self._setMarkup(chr(0x302))
-        self._setMarkup(chr(0x2c6))
+        self._setMarkup(chr(0x302))
+        #self._setMarkup(chr(0x2c6))
         return self
 
     def setWaveAccent(self):
@@ -222,8 +222,8 @@ class Syllable:
         return self
 
     def setPauseAccent(self):
-        #self._setMarkup(chr(0x305))
-        self._setMarkup(chr(0x2C9))
+        self._setMarkup(chr(0x305))
+        #self._setMarkup(chr(0x2C9))
         return self
 
     def __str__(self):
@@ -291,4 +291,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
