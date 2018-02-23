@@ -17,25 +17,39 @@ class AccentsSearcher:
         # Заударные слоги (после последнего акцента)
         self.afterStressed = None
 
+        # Слоги между первым и последним акцентами
+        self.FLbetweenStressed = None
+
     """
     Найти акценты.
     type содержит указания об искомых акцентах через пробел:
     last - последний
     first - первый
     prelast - предпослединй
+    UseLastSyl - указание допустить постановку акцента на последний слог строки
     """
     def FindAccents (self, type):
         # Сбрасываем информацию об акцентах
         self.Reset()
 
+        # Специальный случай для первого колена первого гласа
+        # где можно ставить акцент на последний слог строки
+        aboutLastAcc = "no requirements"
+        if "UseLastSyl" in type:
+            aboutLastAcc = "UseLastSyl"
+            type = type[:-11]
         if type == "last":
-            self._FindLastAccent()
+            self._FindLastAccent(aboutLastAcc)
         elif type == "prelast last":
-            self._FindLastAccent()
+            self._FindLastAccent(aboutLastAcc)
             self._FindPreLastAccent()
-
+        elif type == "first last":
+            self._FindLastAccent(aboutLastAcc)
+            self._FindFirstAccent()
+            if self.firstAccent.num > self.lastAccent.num:
+                raise MarkupException("Есть слишком короткая строка.")
         else:
-            raise NotImplemented(task)
+            raise NotImplemented(type)
 
     def _StandartBackSearch(self, startWord):
         w = startWord
@@ -54,12 +68,48 @@ class AccentsSearcher:
         return candidate
 
 
-    def _FindLastAccent(self):
+    def _StandartForwardSearch(self, startWord):
+        w = startWord
+
+        # Пропускаем предлоги союзы и проч. несмысловые вещи
+        while w and not w.canBeAccent():
+            w = w.next
+
+        # Нашли кандидат
+        candidate = w
+
+        # TODO пропускаем несмысловой, пока один
+        if candidate in self.unwanted:
+            candidate = w.next
+
+        return candidate
+
+
+    def _FindFirstAccent(self):
+        w = self.tree.firstWord
+
+        w = self._StandartForwardSearch(w)
+
+        self.firstAccent = w.stressedSyllable
+
+        #Межударные слоги
+        self.FLbetweenStressed = []
+
+        if self.firstAccent != self.lastAccent:
+            syl = self.firstAccent.next
+            # Пока не дошли до последнего акцента
+            while syl != self.lastAccent:
+                self.FLbetweenStressed.append(syl)
+                syl = syl.next
+
+
+
+    def _FindLastAccent(self, glas):
         w = self.tree.lastWord
 
-        # Если ударным является последний слог строки, переносим
-        # последний акцент назад
-        if w.stressedSyllable == self.tree.last:
+        # Если ударным является последний слог строкии это необходимо,
+        # переносим последний акцент назад
+        if w.stressedSyllable == self.tree.last and glas != "UseLastSyl":
             w = w.prev
 
         w = self._StandartBackSearch(w)
