@@ -208,13 +208,13 @@ class Syllable:
         return self
 
     def setLowerAccent(self):
-        #self._setMarkup(chr(0x30C))
-        self._setMarkup(chr(0x2c7))
+        self._setMarkup(chr(0x30C))
+        #self._setMarkup(chr(0x2c7))
         return self
 
     def setUpperAccent(self):
-        #self._setMarkup(chr(0x302))
-        self._setMarkup(chr(0x2c6))
+        self._setMarkup(chr(0x302))
+        #self._setMarkup(chr(0x2c6))
         return self
 
     def setWaveAccent(self):
