@@ -17,6 +17,7 @@ class AccentsSearcher:
         # Заударные слоги (после последнего акцента)
         self.afterStressed = None
 
+
     """
     Найти акценты.
     type содержит указания об искомых акцентах через пробел:
@@ -33,7 +34,9 @@ class AccentsSearcher:
         elif type == "prelast last":
             self._FindLastAccent()
             self._FindPreLastAccent()
-
+        elif type == "first last":
+            self._FindLastAccent()
+            self._FindFirstAccent()
         else:
             raise NotImplemented(task)
 
@@ -53,6 +56,21 @@ class AccentsSearcher:
 
         return candidate
 
+    def _StandartForwardSearch(self, startWord):
+        w = startWord
+
+        # Пропускаем предлоги союзы и проч. несмысловые вещи
+        while w and not w.canBeAccent():
+            w = w.next
+
+        # Нашли кандидат
+        candidate = w
+
+        # TODO пропускаем несмысловой, пока один
+        if candidate in self.unwanted:
+            candidate = w.next
+
+        return candidate
 
     def _FindLastAccent(self):
         w = self.tree.lastWord
@@ -89,12 +107,21 @@ class AccentsSearcher:
 
         self.preLastAccent = w.stressedSyllable
 
+    def _FindFirstAccent(self):
+        w = self.tree.firstWord
+        w = self._StandartForwardSearch(w)
 
+        self.firstAccent = w.stressedSyllable
 
-
-
-
-
+        # Проверка
+        firstAc = self.firstAccent
+        while firstAc != self.tree.last:
+            if firstAc == self.lastAccent:
+                break;
+            else:
+                firstAc = firstAc.next
+        if firstAc != self.lastAccent:
+            raise MarkupException("Первый акцент правее последнего!!!")
 
 
 """
