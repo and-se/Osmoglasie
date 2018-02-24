@@ -14,9 +14,10 @@ class AccentsSearcher:
         self.lastAccent = None
         self.preLastAccent = None
 
-        # Заударные и предударные слоги
+        # Заударные (после последнего акцента) и предударные (перед первым акцентом) слоги
         self.afterStressed = None
         self.beforeStressed = None
+
 
     """
     Найти акценты.
