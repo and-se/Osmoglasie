@@ -28,7 +28,9 @@ class AccentsSearcher:
         # Сбрасываем информацию об акцентах
         self.Reset()
 
-        if type == "last":
+        if type == "first":
+            self._FindFirstAccent()
+        elif type == "last":
             self._FindLastAccent()
         elif type == "prelast last":
             self._FindLastAccent()
@@ -52,6 +54,15 @@ class AccentsSearcher:
             candidate = w.prev
 
         return candidate
+
+    def _FindFirstAccent(self):
+        w = self.tree.firstWord
+
+        # Если встречаются союзы и предлоги, пропускаем
+        while w and not w.canBeAccent():
+            w = w.next
+
+        self.firstAccent = w.stressedSyllable
 
 
     def _FindLastAccent(self):
