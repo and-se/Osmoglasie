@@ -222,8 +222,8 @@ class Syllable:
         return self
 
     def setPauseAccent(self):
-        #self._setMarkup(chr(0x305))
-        self._setMarkup(chr(0x2C9))
+        self._setMarkup(chr(0x305))
+        #self._setMarkup(chr(0x2C9))
         return self
 
     def __str__(self):

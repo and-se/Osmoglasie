@@ -17,7 +17,7 @@
         for s in strings[:-1]:
             # переход на следующее колено
             schema.Next(ost)
-            ost = ost-1
+            ost = ost - 1
             result.append(self.MarkupLine(s, schema.current))
 
         schema.Last()
