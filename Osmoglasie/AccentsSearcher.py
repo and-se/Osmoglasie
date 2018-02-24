@@ -50,7 +50,7 @@ class AccentsSearcher:
         while w and not w.canBeAccent():
             w = w.prev
 
-        # Нашли кандидат
+        # Нашли кандидата
         candidate = w
 
         # TODO пропускаем несмысловой, пока один

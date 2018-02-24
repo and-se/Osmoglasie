@@ -11,7 +11,7 @@
 
 from .Exceptions import *
 
-stressed = chr(0x301)
+stressed = chr(0x301)#ударение
 
 def ClearStr(s):
     return s.replace(stressed, '')
@@ -22,6 +22,7 @@ compoundWordStems = {
 "многомилостив" : 1
 }
 
+#дерево слогов
 class SyllableTree:
     def __init__(self,text):
         self.syllables = []
@@ -291,4 +292,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
