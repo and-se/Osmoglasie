@@ -38,7 +38,12 @@ class Glas2_Template(GlasTemplateBase):
         Колено неполное, лишь посл. акцент. Схема: ...-/...
         """
         accents = AccentsSearcher(tree, "last")
-        accents.lastAccent.setPauseAccent().next.setUp()
+        
+        if len(accents.afterStressed) == 1:
+            accents.lastAccent.setWaveAccent()
+        else:
+            accents.lastAccent.setPauseAccent().next.setUp()
+            
         return tree
 
     def Markup_3(self, tree):
