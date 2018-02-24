@@ -1,4 +1,4 @@
-﻿class GlasTemplateBase:
+class GlasTemplateBase:
     """
     Получить схему гласа (наследник GlasSchemaBase)
     """
