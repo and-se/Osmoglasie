@@ -61,4 +61,6 @@ def GetGlasTemplate(glas, type):
         return Tropar.Glas4_Template()
     elif glas == 3:
         return Tropar.Glas3_Template()
+    elif glas == 5:
+        return Tropar.Glas5_Template()
     raise NotImplementedError()
