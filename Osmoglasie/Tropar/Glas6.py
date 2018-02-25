@@ -98,7 +98,10 @@ class Glas6_Template(GlasTemplateBase):
         preLastA = accents.preLastAccent
         lastA = accents.lastAccent
 
-        preLastA.prev.setUp()
+        # Если перед предпоследним акцентом есть слоги
+        # Их нет например в строке: Господи слава Тебе
+        if preLastA.prev:
+            preLastA.prev.setUp()
 
         if preLastA.next == lastA:
             preLastA.setWaveAccent()
