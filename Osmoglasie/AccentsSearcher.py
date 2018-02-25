@@ -21,27 +21,36 @@ class AccentsSearcher:
 
     """
     Найти акценты.
-    type содержит указания об искомых акцентах через пробел:
-    last - последний
+    type содержит указания об искомых акцентах через пробел:    
     first - первый
     prelast - предпослединй
+    last - последний
+    UseLastSyl - указание допустить постановку акцента на последний слог строки
     """
     def FindAccents (self, type):
         # Сбрасываем информацию об акцентах
         self.Reset()
+        
+        isLastSyllableAllowed = False
+        
+        if type.endswith(" UseLastSyl"):
+            isLastSyllableAllowed = True
+            type = type[:-11] 
 
         if type == "first":
             self._FindFirstAccent()
         elif type == "last":
-            self._FindLastAccent()
+            self._FindLastAccent(isLastSyllableAllowed)
         elif type == "prelast last":
-            self._FindLastAccent()
+            self._FindLastAccent(isLastSyllableAllowed)
             self._FindPreLastAccent()
         elif type == "first last":
             self._FindFirstAccent()
-            self._FindLastAccent()
+            self._FindLastAccent(isLastSyllableAllowed)
+            #if self.firstAccent.num > self.lastAccent.num:
+            #    raise MarkupException("Есть слишком короткая строка.")
         else:
-            raise NotImplemented(task)
+            raise NotImplementedError(type)
 
     def _StandartBackSearch(self, startWord):
         w = startWord
@@ -75,12 +84,12 @@ class AccentsSearcher:
 
         return candidate
 
-    def _FindLastAccent(self):
+    def _FindLastAccent(self, isLastSyllableAllowed):
         w = self.tree.lastWord
 
-        # Если ударным является последний слог строки, переносим
-        # последний акцент назад
-        if w.stressedSyllable == self.tree.last:
+        # Если ударным является последний слог строкии это необходимо,
+        # переносим последний акцент назад
+        if w.stressedSyllable == self.tree.last and not isLastSyllableAllowed:
             w = w.prev
 
         w = self._StandartBackSearch(w)
