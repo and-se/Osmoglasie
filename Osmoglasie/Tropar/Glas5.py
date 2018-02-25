@@ -1,4 +1,6 @@
-﻿from ..SyllableTree import *
+﻿# Author Диана Фоменко
+
+from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *

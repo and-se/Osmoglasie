@@ -1,4 +1,6 @@
-﻿from ..SyllableTree import *
+﻿# Author Кирилл Колгушкин
+
+from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *

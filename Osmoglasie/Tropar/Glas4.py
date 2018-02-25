@@ -1,4 +1,6 @@
-﻿from ..SyllableTree import *
+﻿# Author Тихон Сысоев
+
+from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *

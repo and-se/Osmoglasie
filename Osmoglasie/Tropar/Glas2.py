@@ -1,3 +1,5 @@
+# Author Вячеслав Какоткин
+
 from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
