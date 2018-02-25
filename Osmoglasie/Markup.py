@@ -73,6 +73,13 @@ def GetGlasTemplate(glas, type):
     elif type == "стихира":
         if glas == 1:
             return Stihira.Glas1Stih_Template()            
+        # 2, 5 и 6 стихирные гласы совпадают с тропарными
+        elif glas == 2:
+            return Tropar.Glas2_Template()
+        elif glas == 5:
+            return Tropar.Glas5_Template()
+        elif glas == 6:
+            return Tropar.Glas6_Template()        
 
     raise NotImplementedError()
 
