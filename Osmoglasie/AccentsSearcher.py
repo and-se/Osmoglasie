@@ -35,7 +35,10 @@ class AccentsSearcher:
         
         if type.endswith(" UseLastSyl"):
             isLastSyllableAllowed = True
-            type = type[:-11] 
+            type = type[:-11]            
+            
+        if self.TryFindManualAccents(type):
+            return
 
         if type == "first":
             self._FindFirstAccent()
@@ -51,6 +54,34 @@ class AccentsSearcher:
             #    raise MarkupException("Есть слишком короткая строка.")
         else:
             raise NotImplementedError(type)
+            
+    # Попытка найти расставленные вручную акценты
+    def TryFindManualAccents(self, type):
+        # Получим вручную расставленные акценты
+        mAcc = [x for x in self.tree.syllables if x.isAccent]
+        
+        if not mAcc:
+            return False
+            
+        # Список искомых акцентов
+        targetAccs = type.split()
+
+        # Если в строке есть ручной акцент, то все акценты в строке должны
+        # быть расставлены вручную        
+        if len(targetAccs) != len(mAcc):
+            raise MarkupException("В строке '%s' расставлены не все требуемые акценты: %s" % (str(self.tree), type))
+           
+        for i in range(len(targetAccs)):
+            if targetAccs[i] == "first":
+                self.firstAccent = mAcc[i]
+                self._BuildBeforeStressed()
+            elif targetAccs[i] == "prelast":
+                self.preLastAccent = mAcc[i]
+            elif targetAccs[i] == "last":
+                self.lastAccent = mAcc[i]
+                self._BuildAfterStressed()
+                
+        return True
 
     def _StandartBackSearch(self, startWord):
         w = startWord
@@ -100,14 +131,18 @@ class AccentsSearcher:
         if self.firstAccent != None and self.firstAccent.num > self.lastAccent.num:
             raise MarkupException("В строке %s первый акцент оказался впереди последнего" % str(self.tree))
 
-        # Заударные слоги
-        self.afterStressed = []
+        # Заударные слоги        
+        self._BuildAfterStressed()
 
+            
+    def _BuildAfterStressed(self):
+        self.afterStressed = []
         syl = self.lastAccent.next
 
         while syl:
             self.afterStressed.append(syl)
             syl = syl.next
+    
 
     def _FindPreLastAccent(self):
         start = self.lastAccent.parentWord
@@ -127,12 +162,18 @@ class AccentsSearcher:
         w = self.tree.firstWord
         w = self._StandartForwardSearch(w)
         self.firstAccent = w.stressedSyllable
+
         #Предударные слоги
+        self._BuildBeforeStressed()
+            
+    def _BuildBeforeStressed(self):
         self.beforeStressed = []
         syl = self.tree.first
         while syl != self.firstAccent:
             self.beforeStressed.append(syl)
             syl = syl.next
+
+    
 
 """
         w = self.firstWord

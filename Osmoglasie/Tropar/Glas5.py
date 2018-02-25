@@ -32,17 +32,16 @@ class Glas5_Template(GlasTemplateBase):
         # Нам нужен первый и последний акценты
         # Сначала находим первый акцент,
         # который выражен остоновкой
-        accents = AccentsSearcher(tree, "first")
+        accents = AccentsSearcher(tree, "first last")
         accents.firstAccent.setPauseAccent()
 
         # Потом находим последний акцент,
         # который предворяется последовательным спуском
         # и подъемом, после - следует спуск
         firstA = accents.firstAccent
-        accents = AccentsSearcher(tree, "last")
         lastA = accents.lastAccent
         if (lastA.num - firstA.num < 3):
-            return MarkupException("ОШИБКА! В колене недостаточно слогов")
+            raise MarkupException("ОШИБКА! В колене недостаточно слогов")
         else:
             lastA.setUpperAccent().prev.setUp().prev.setDown()
             lastA.next.setDown()

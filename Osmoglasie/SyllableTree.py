@@ -14,6 +14,9 @@ from .Exceptions import *
 # Варианты ударения
 stressed = (chr(0x301), chr(0xf009), "'")
 
+# Символ акцента
+manualAccent = '@'
+
 # Двусоставные слова, числом указан номер слога с "невидимым" ударением
 compoundWordStems = {
 "человеколюб" : 2,
@@ -138,8 +141,14 @@ class SyllableTree:
             if text[i] in poem:
                 #< len(text)-1:
                 k = i+1
-                if i+1 < len(text) and text[i+1] in stressed:
-                    k=k+1
+                
+                # Читаем ударение и ручной акцент - их до 2 штук
+                if i+1 < len(text) and text[i+1] in stressed + (manualAccent,):
+                    k+=1
+                    
+                    if i+2 < len(text) and text[i+2] in stressed + (manualAccent,):
+                        k+=1
+                    
                 m.append(text[prev:k])
                 prev = k
             elif i == len(text)-1 and m:
@@ -166,14 +175,42 @@ class Syllable:
         self.str = str        
         self.next = next
         self.prev = prev
-        #self.isAccent = None
         self.num = num
         self.markup = None
         self.parentWord = parentWord
-
+                
+        # Объявим флаги ударения и акцента, а также очищенную строку (без символов ударения и акцента)
+        self.isStressed = None
+        self.isAccent = None
+        self.cleanStr = None
+        self._InitFlags()
+            
+    def _InitFlags(self):
         # Ищем символ гласной
-        stressNum = self._FindPoemSymbolNum(self.str) + 1
+        flagNum = self._FindPoemSymbolNum(self.str) + 1
         
+        # После гласной может быть до 2 спец символов - ударение stressed и ручной акцент        
+        if flagNum != -1:
+            endFlags = flagNum
+            
+            for i in range(flagNum, len(self.str)):
+                # Если это флаг
+                if self.str[i] in stressed + (manualAccent,):
+                    endFlags = i + 1
+                    if self.str[i] in stressed:
+                        self.isStressed = True
+                    else:   
+                        self.isAccent = True
+                else:
+                    break
+            # Строим очищенную строку без ударения и ручного акцента        
+            self.cleanStr = self.str[:flagNum] + self.str[endFlags:]           
+            
+        else:
+            self.isStressed = False
+            self.cleanStr = self.str 
+                    
+        """
         # Определим ударение
         # Если символ после гласной есть и это значок ударения
         if stressNum != -1 and stressNum < len(self.str) and self.str[stressNum] in stressed:
@@ -182,6 +219,9 @@ class Syllable:
         else:
             self.isStressed = False
             self.cleanStr = self.str
+        """
+
+        
             
     def _FindPoemSymbolNum(self, str):        
         if not str:            
