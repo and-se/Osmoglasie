@@ -66,13 +66,13 @@ class Glas5_Template(GlasTemplateBase):
         # Нам нужен первый и последний акценты
         # Сначала находим первый акцент,
         # который выражен остоновкой
-        accents = AccentsSearcher(tree, "first")
+        accents = AccentsSearcher(tree, "first last")
         accents.firstAccent.setPauseAccent()
 
         # Потом находим последний акцент,
         # он нисходящий
         firstA = accents.firstAccent
-        accents = AccentsSearcher(tree, "last")
+
         lastA = accents.lastAccent
         lastA.setLowerAccent()
 
