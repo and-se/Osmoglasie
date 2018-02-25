@@ -76,10 +76,18 @@ class Glas2_Template(GlasTemplateBase):
     def Markup_K(self, tree):
         """
         Колено неполное, лишь посл. акцент. Схема: .../ \/ \...
+        
+        Если заударный слог 1, то ... / ~ .
         """
         accents = AccentsSearcher(tree, "last")
+        
         accents.lastAccent.prev.setUp()
-        accents.lastAccent.setLowerAccent().next.setDown()
+        
+        if(len(accents.afterStressed) > 1):
+            accents.lastAccent.setLowerAccent().next.setDown()
+        else:
+            accents.lastAccent.setWaveAccent()
+            
         return tree
 
 class Glas2_Schema(GlasSchemaBase):
