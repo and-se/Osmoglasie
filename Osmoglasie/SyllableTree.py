@@ -11,10 +11,8 @@
 
 from .Exceptions import *
 
-stressed = chr(0x301)#ударение
-
-def ClearStr(s):
-    return s.replace(stressed, '')
+# Варианты ударения
+stressed = (chr(0x301), chr(0xf009), "'")
 
 # Двусоставные слова, числом указан номер слога с "невидимым" ударением
 compoundWordStems = {
@@ -115,7 +113,7 @@ class SyllableTree:
                 w.lastSyllable = syl[-1]
 
                 for s in syl:
-                    if stressed in s.str:
+                    if s.isStressed:
                         w.stressedSyllable = s
                         break
 
@@ -140,7 +138,7 @@ class SyllableTree:
             if text[i] in poem:
                 #< len(text)-1:
                 k = i+1
-                if i+1 < len(text) and text[i+1] == stressed:
+                if i+1 < len(text) and text[i+1] in stressed:
                     k=k+1
                 m.append(text[prev:k])
                 prev = k
@@ -164,23 +162,36 @@ class SyllableTree:
 
 
 class Syllable:
-    def __init__(self, str, parentWord, num = None, next= None, prev = None, isStressed = False):
-        self.str = str
-        self.cleanStr = ClearStr(self.str)
+    def __init__(self, str, parentWord, num = None, next= None, prev = None):
+        self.str = str        
         self.next = next
         self.prev = prev
         #self.isAccent = None
         self.num = num
-        self.isStressed = isStressed
         self.markup = None
         self.parentWord = parentWord
 
+        # Ищем символ гласной
+        stressNum = self._FindPoemSymbolNum(self.str) + 1
+        
         # Определим ударение
-        #y = None # значок ударения
-        #if y in self.str:
-        #    self.isStressed = True
-        #else:
-        #    self.isStressed = False
+        # Если символ после гласной есть и это значок ударения
+        if stressNum != -1 and stressNum < len(self.str) and self.str[stressNum] in stressed:
+            self.isStressed = True
+            self.cleanStr = self.str[:stressNum] + self.str[stressNum+1:]
+        else:
+            self.isStressed = False
+            self.cleanStr = self.str
+            
+    def _FindPoemSymbolNum(self, str):        
+        if not str:            
+            return -1
+        
+        for i in range(len(str)):
+            if str[i] in SyllableTree.poemSymbols:
+                return i
+               
+        return -1  
 
     def CheckMarkup(self):
         if self.markup:
@@ -190,17 +201,14 @@ class Syllable:
         self.CheckMarkup()
 
         # Ищем вхождение гласной
-
-        for i in range(len(self.cleanStr)):
-            if self.cleanStr[i] in SyllableTree.poemSymbols:
-                # Ставим знак
-                self.markup = self.cleanStr[:i+1] + char + self.cleanStr[i+1:]
-                return
+        i = self._FindPoemSymbolNum(self.cleanStr)
+        
+        if i != -1:        
+            # Ставим знак
+            self.markup = self.cleanStr[:i+1] + char + self.cleanStr[i+1:]
+            return
 
         raise SyllableTreeException("В слоге '%s' не найдена гласная" % self.str)
-
-
-
 
     def setUp(self):
         self._setMarkup(chr(0x301))
@@ -256,13 +264,15 @@ class Word:
         while x and x.prev != self.lastSyllable:
             yield x
             x = x.next
+            
+    def _BuildPrettyWord(self):
+        if not self.firstSyllable:
+            return self.word
+        else:
+            return "".join(str(x) for x in self.GetSyllables())
 
     def __str__(self):
-        if not self.firstSyllable:
-            return self.word + (self.punctuation or '')
-        else:
-            return "".join(str(x) for x in self.GetSyllables()) + (self.punctuation or '')
-
+        return self._BuildPrettyWord() + (self.punctuation or '')
 
     def __repr__(self):
         return "Word('%s', %s, next=%s, prev=%s)" % (str(self), self.stressedSyllable, self.next, self.prev)
@@ -271,22 +281,27 @@ class Word:
         # У предлогов и союзов не должно стоять ударение
         return self.stressedSyllable != None
 
-
-
     # является ли слово двусоставным
     #def isCompound(self):
         #ClearStr(self.word).lower() in compoundWordStems.keys()
+    """ #NB! ClearStr устарела!
+    def ClearStr(s):
+        for stres in stressed:
+            s = s.replace(stres, '')
+            
+        return s
+    """
 
 
     def __eq__(self, other):
         if isinstance(other, str):
-            return ClearStr(self.word) == other
+            return self._BuildPrettyWord() == other
 
         return NotImplementedError
 
 
 def main():
-    s = ' ,,С высоты{0} снизше{0}л?? еси{0}, Благоутро{0}бне!!'.format(stressed)
+    s = ' ,,С высоты{0} снизше{0}л?? еси{0}, Благоутро{0}бне!!'.format(stressed[0])
 
     a = SyllableTree(s)
 
