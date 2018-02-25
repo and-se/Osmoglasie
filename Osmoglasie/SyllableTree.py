@@ -127,7 +127,9 @@ class SyllableTree:
             self.first = self.syllables[0]
             self.last = self.syllables[-1]
 
-    poemSymbols = 'аеиоуыэюя' + 'аеиоуыэюя'.upper()  # строка глассных
+    poemSymbols = 'аеиоуыэюяi' + 'аеиоуыэюяi'.upper()  # строка глассных
+    # В дореволюционной орфографии слово мiр означало общество, вселенную и т.д.,
+    # а мир - отсутствие ссоры, войны; спокойствие и т.д.
 
     #разбить на слоги
     def SplitToSyllables(self, text):
