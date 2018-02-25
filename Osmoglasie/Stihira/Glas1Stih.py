@@ -1,11 +1,13 @@
+﻿# Author Анастасия Елетина
+
 from ..SyllableTree import *
 from ..AccentsSearcher import *
 from ..GlasBase import *
 from ..Exceptions import *
 
-class Glas6_Template(GlasTemplateBase):
+class Glas1Stih_Template(GlasTemplateBase):
     def CreateSchema(self):
-        return Glas6_Schema()
+        return Glas1Stih_Schema()
     """
     Размечает строку на указанное колено
     """
@@ -19,26 +21,48 @@ class Glas6_Template(GlasTemplateBase):
             return self.Markup_2(tree)
         elif schema_line == "3":
             return self.Markup_3(tree)
-        elif schema_line == "2а":
-            return self.Markup_2a(tree)
+        elif schema_line == "4":
+            return self.Markup_4(tree)
         elif schema_line == "К":
             return self.Markup_K(tree)
         else:
             raise MarkupException('Некорректный номер колена %s' % schema_line)
 
     def Markup_1(self, tree):
-        # Схема колена: ... v ... /
-
-        #Нам нужен только последний акцент
+        # Схема колена: ... ~ \ ... \ ^ ...\\
+        #Сначала нам нужен первый акцент
+        #Первая часть " ... ~ \ ":
+        accents = AccentsSearcher(tree, "first")
+        accents.firstAccent.setWaveAccent().next.setDown()
+        #Вторая часть "... \ ^ ...\\":
+        # Ставим последний акцент
+        firstA = accents.firstAccent
         accents = AccentsSearcher(tree, "last")
+        lastA = accents.lastAccent
+        if (firstA == lastA)  or (firstA.next == lastA):
+            raise MarkupException("ОШИБКА! В колене недостаточно слогов: %s" % tree)
+        else:
 
-        accents.lastAccent.setLowerAccent()
-        tree.last.setUp()
+            # Заударные слоги (т.е. слоги после последнего акцента)
+            zaudarn = accents.afterStressed
 
-        return tree
+            if lastA.num - firstA.num > 2:
+                lastA.prev.setDown()
+
+            if len(zaudarn) < 2:
+                lastA.setWaveAccent()
+                tree.last.setDown()
+            else:
+
+                lastA.setUpperAccent()
+                tree.last.prev.setDown()
+                tree.last.setDown()
+            return tree
+
+
 
     def Markup_2(self, tree):
-        # Схема колена: ... — \ ... /
+        # Схема колена: ... \ ^ / ... \
 
         #Нам нужен только последний акцент
         accents = AccentsSearcher(tree, "last")
@@ -46,51 +70,35 @@ class Glas6_Template(GlasTemplateBase):
         # Заударные слоги (т.е. слоги после последнего акцента)
         zaudarn = accents.afterStressed
         # Количество заударных слогов
+        accents.lastAccent.prev.setDown()
         if len(zaudarn) < 2:
-            accents.lastAccent.setWaveAccent().next.setUp()
+            accents.lastAccent.setWaveAccent()
+            tree.last.setDown()
         else:
-            accents.lastAccent.setPauseAccent().next.setDown()
-            tree.last.setUp()
-
-        return tree
-
-    def Markup_2a(self, tree):
-        # Схема колена: ... — \ ... \
-
-        #Нам нужен только последний акцент
-        accents = AccentsSearcher(tree, "last")
-
-        # Заударные слоги (т.е. слоги после последнего акцента)
-        zaudarn = accents.afterStressed
-        # Количество заударных слогов
-        if len(zaudarn) < 2:
-            accents.lastAccent.setWaveAccent().next.setDown()
-        else:
-            accents.lastAccent.setPauseAccent().next.setDown()
+            accents.lastAccent.setUpperAccent().next.setUp()
             tree.last.setDown()
 
         return tree
 
     def Markup_3(self, tree):
-        # Схема колена: ... v ... \ \
+        # Схема колена:  — ... v ... \
 
-        #Нам нужен только последний акцент
+        #Нам нужен первый и последний акценты
+        accents = AccentsSearcher(tree, "first")
+        accents.firstAccent.setPauseAccent()
         accents = AccentsSearcher(tree, "last")
-
         # Заударные слоги (т.е. слоги после последнего акцента)
         zaudarn = accents.afterStressed
         # Количество заударных слогов
-        if len(zaudarn) < 2:
-            accents.lastAccent.setWaveAccent().next.setDown()
-        else:
-            accents.lastAccent.setLowerAccent()
-            tree.last.setDown().prev.setDown()
+        accents.lastAccent.setLowerAccent()
+        tree.last.setDown()
 
         return tree
 
-    def Markup_K(self, tree):
-        # Схема колена: ... / ^ ... \ v \ ... /
-        # т.е. есть последний и предпоследний акценты
+    def Markup_4(self, tree):
+        # Схема колена: ... v / ... ^ \ ... \
+
+        #Нам нужен только последний и предпоследний акценты
 
         accents = AccentsSearcher(tree, "prelast last")
 
@@ -98,29 +106,39 @@ class Glas6_Template(GlasTemplateBase):
         preLastA = accents.preLastAccent
         lastA = accents.lastAccent
 
-        # Если перед предпоследним акцентом есть слоги
-        # Их нет например в строке: Господи слава Тебе
-        if preLastA.prev:
-            preLastA.prev.setUp()
-
         if preLastA.next == lastA:
             preLastA.setWaveAccent()
         else:
-            preLastA.setUpperAccent()
-
-        # Ставим последний акцент
-
-        if lastA.prev != preLastA:
-            lastA.prev.setDown()
+            preLastA.setLowerAccent().next.setUp()
 
         # Заударные слоги (т.е. слоги после последнего акцента)
         zaudarn = accents.afterStressed
 
         if len(zaudarn) < 2:
-            lastA.setWaveAccent().next.setUp()
+            lastA.setWaveAccent().next.setDown()
+        else:
+            lastA.setUpperAccent()
+            lastA.next.setDown()
+            tree.last.setDown()
+
+        return tree
+
+    def Markup_K(self, tree):
+        # Схема колена:  ... v \ ... \
+        # т.е. есть последний акцент
+
+        accents = AccentsSearcher(tree, "last")
+
+        lastA = accents.lastAccent
+
+        # Заударные слоги (т.е. слоги после последнего акцента)
+        zaudarn = accents.afterStressed
+
+        if len(zaudarn) < 2:
+            lastA.setWaveAccent().next.setDown()
         else:
             lastA.setLowerAccent().next.setDown()
-            tree.last.setUp()
+            tree.last.setDown()
 
         return tree
 
@@ -156,43 +174,28 @@ class Glas6_Template(GlasTemplateBase):
         return tree
 """
 
-class Glas6_Schema(GlasSchemaBase):
+class Glas1Stih_Schema(GlasSchemaBase):
     def __init__(self):
         self.current = None
 
-    def CheckStringCount(self, n):
-        t1 = (n-1)/3 #без 2а   n = 3p + 1
-        t2 = (n-3)/3 #с 2а     n = 3p + 3
-
-        if t1 != int(t1) and t2 != int(t2) and n != 3:
-            raise SchemaException("Неправильное количество колен для 6 гласа")
-
-
     def Next(self, ostatok):
         if not self.current:
-            self.CheckStringCount(ostatok)
             self.current = "1"
             return
 
         if self.current == "1":
-            if ostatok == 2:
-                self.current = "2а"
-            else:
-                self.current = "2"
+            self.current = "2"
 
         elif self.current == "2":
             self.current = "3"
 
         elif self.current == "3":
-            self.current = "1"
+            self.current = "4"
 
-        else:
-            raise SchemaException("С колена %s возможен переход только на конечное" % self.current)
+        elif self.current == "4":
+            self.current = "1"
 
 
     def Last (self):
-        if self.current == "3" or self.current == "2а":
-            self.current = "К"
-            return
-
-        raise SchemaException("С колена %s переход в конечное колено невозможен" % self.current)
+        self.current = "К"
+        return

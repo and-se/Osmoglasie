@@ -14,28 +14,43 @@ class AccentsSearcher:
         self.lastAccent = None
         self.preLastAccent = None
 
-        # Заударные слоги (после последнего акцента)
+        # Заударные (после последнего акцента) и предударные (перед первым акцентом) слоги
         self.afterStressed = None
+        self.beforeStressed = None
+
 
     """
     Найти акценты.
-    type содержит указания об искомых акцентах через пробел:
-    last - последний
+    type содержит указания об искомых акцентах через пробел:    
     first - первый
     prelast - предпослединй
+    last - последний
+    UseLastSyl - указание допустить постановку акцента на последний слог строки
     """
     def FindAccents (self, type):
         # Сбрасываем информацию об акцентах
         self.Reset()
+        
+        isLastSyllableAllowed = False
+        
+        if type.endswith(" UseLastSyl"):
+            isLastSyllableAllowed = True
+            type = type[:-11] 
 
-        if type == "last":
-            self._FindLastAccent()
+        if type == "first":
+            self._FindFirstAccent()
+        elif type == "last":
+            self._FindLastAccent(isLastSyllableAllowed)
         elif type == "prelast last":
-            self._FindLastAccent()
+            self._FindLastAccent(isLastSyllableAllowed)
             self._FindPreLastAccent()
-
+        elif type == "first last":
+            self._FindFirstAccent()
+            self._FindLastAccent(isLastSyllableAllowed)
+            #if self.firstAccent.num > self.lastAccent.num:
+            #    raise MarkupException("Есть слишком короткая строка.")
         else:
-            raise NotImplemented(task)
+            raise NotImplementedError(type)
 
     def _StandartBackSearch(self, startWord):
         w = startWord
@@ -44,7 +59,7 @@ class AccentsSearcher:
         while w and not w.canBeAccent():
             w = w.prev
 
-        # Нашли кандидат
+        # Нашли кандидата
         candidate = w
 
         # TODO пропускаем несмысловой, пока один
@@ -53,18 +68,37 @@ class AccentsSearcher:
 
         return candidate
 
+    def _StandartForwardSearch(self, startWord):
+        w = startWord
 
-    def _FindLastAccent(self):
+        # Пропускаем предлоги союзы и проч. несмысловые вещи
+        while w and not w.canBeAccent():
+            w = w.next
+
+        # Нашли кандидат
+        candidate = w
+
+        # TODO пропускаем несмысловой, пока один
+        if candidate in self.unwanted:
+            candidate = w.next
+
+        return candidate
+
+    def _FindLastAccent(self, isLastSyllableAllowed):
         w = self.tree.lastWord
 
-        # Если ударным является последний слог строки, переносим
-        # последний акцент назад
-        if w.stressedSyllable == self.tree.last:
+        # Если ударным является последний слог строкии это необходимо,
+        # переносим последний акцент назад
+        if w.stressedSyllable == self.tree.last and not isLastSyllableAllowed:
             w = w.prev
 
         w = self._StandartBackSearch(w)
 
         self.lastAccent = w.stressedSyllable
+
+        #Тут добавим к случаю с firstAccent
+        if self.firstAccent != None and self.firstAccent.num > self.lastAccent.num:
+            raise MarkupException("В строке %s первый акцент оказался впереди последнего" % str(self.tree))
 
         # Заударные слоги
         self.afterStressed = []
@@ -89,13 +123,16 @@ class AccentsSearcher:
 
         self.preLastAccent = w.stressedSyllable
 
-
-
-
-
-
-
-
+    def _FindFirstAccent(self):
+        w = self.tree.firstWord
+        w = self._StandartForwardSearch(w)
+        self.firstAccent = w.stressedSyllable
+        #Предударные слоги
+        self.beforeStressed = []
+        syl = self.tree.first
+        while syl != self.firstAccent:
+            self.beforeStressed.append(syl)
+            syl = syl.next
 
 """
         w = self.firstWord

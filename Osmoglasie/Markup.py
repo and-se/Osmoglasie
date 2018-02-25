@@ -12,6 +12,7 @@ from .SyllableTree import *
 from .AccentsSearcher import *
 from .Exceptions import *
 from . import Tropar
+from . import Stihira
 
 """
 Разметить текст на глас указанного жанра песнопений (тропарный и т.д.)
@@ -48,12 +49,37 @@ def GetLogicalStrings(text):
     return list(map(str.strip, lines + [k[1]]))
 
 def GetGlasTemplate(glas, type):
-    if type != "тропарь":
+    if type != "тропарь" and type != "стихира":
         raise NotImplementedError()
-
-    if glas == 8:
-        return Tropar.Glas8_Template()
-    elif glas == 6:
-        return Tropar.Glas6_Template()
+        
+    if type == "тропарь":
+        if glas == 1:
+            return Tropar.Glas1_Template()
+        elif glas == 2:
+            return Tropar.Glas2_Template()
+        elif glas == 3:
+            return Tropar.Glas3_Template()
+        elif glas == 4:
+            return Tropar.Glas4_Template()        
+        elif glas == 5:
+            return Tropar.Glas5_Template()
+        elif glas == 6:
+            return Tropar.Glas6_Template()        
+        elif glas == 7:
+            return Tropar.Glas7_Template()
+        elif glas == 8:
+            return Tropar.Glas8_Template()
+            
+    elif type == "стихира":
+        if glas == 1:
+            return Stihira.Glas1Stih_Template()            
+        # 2, 5 и 6 стихирные гласы совпадают с тропарными
+        elif glas == 2:
+            return Tropar.Glas2_Template()
+        elif glas == 5:
+            return Tropar.Glas5_Template()
+        elif glas == 6:
+            return Tropar.Glas6_Template()        
 
     raise NotImplementedError()
+
