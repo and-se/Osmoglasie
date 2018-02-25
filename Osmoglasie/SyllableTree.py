@@ -282,7 +282,7 @@ class Word:
         if isinstance(other, str):
             return ClearStr(self.word) == other
 
-        return NotImplemented
+        return NotImplementedError
 
 
 def main():

@@ -3,7 +3,7 @@ class GlasTemplateBase:
     Получить схему гласа (наследник GlasSchemaBase)
     """
     def CreateSchema(self):
-        raise NotImplemented("abstract")
+        raise NotImplementedError("abstract")
 
     """
     Размечает логические строки на глас
@@ -29,7 +29,7 @@ class GlasTemplateBase:
     Размечает строку на указанное колено
     """
     def MarkupLine (self, line, schema_line):
-        raise NotImplemented("abstract")
+        raise NotImplementedError("abstract")
 
 class GlasSchemaBase:
 
@@ -42,11 +42,11 @@ class GlasSchemaBase:
     ostatok - количество неразмеченных колен, изначально 0
     """
     def Next(self, ostatok):
-        raise NotImplemented("abstract")
+        raise NotImplementedError("abstract")
 
     """
     Перейти к последнему колену, если это возможно из текущей позиции.
     Иначе - исключение SchemaException
     """
     def Last(self):
-        raise NotImplemented("abstract")
+        raise NotImplementedError("abstract")
